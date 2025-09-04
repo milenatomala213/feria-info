@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Juego de Pares - Feria de Info</title>
+  <!-- Fuente arcade -->
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: url('https://scoutsecuador.org/wp-content/uploads/2023/05/112-fondos-de-pantalla-de-super-mario-bros.-hd-imagenes-de-fondo-fondo-de-pantalla.-wallpaper-2k-de-mario-bros.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1 {
+      font-family: 'Press Start 2P', cursive;
+      background: #007BFF;
+      padding: 15px;
+      margin: 0;
+      color: yellow;
+      text-shadow: 2px 2px black;
+    }
+
+    #start-button {
+      font-family: 'Press Start 2P', cursive;
+      margin: 20px;
+      padding: 10px 20px;
+      font-size: 14px;
+      background-color: #de3d2b;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      text-shadow: 1px 1px black;
+    }
+
+    #game-board {
+      display: grid;
+      grid-template-columns: repeat(4, 120px);
+      gap: 15px;
+      justify-content: center;
+      margin: 20px auto;
+      max-width: 600px;
+    }
+
+    .card {
+      width: 120px;
+      height: 120px;
+      border: 3px solid #de3d2b;
+      border-radius: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      position: relative;
+      perspective: 600px;
+    }
+
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+    }
+
+    .card.flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .card-front, .card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      font-size: 16px;
+      color: white;
+    }
+
+    .card-front {
+      background-color: #60b352; /* fondo verde */
+      color: white;
+    }
+
+    .card-back {
+      background-color: #60b352;
+      transform: rotateY(180deg);
+      color: white;
+    }
+
+    .card-back img {
+      max-width: 80px;
+    }
+
+    .card-back span {
+      font-size: 14px;
+      color: white;
+    }
+
+    #timer {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 20px;
+      margin-top: 10px;
+      background-color: #de3d2b; /* fondo rojo */
+      color: white; /* letras blancas */
+      display: inline-block;
+      padding: 10px 20px;
+      border-radius: 10px;
+      border: 3px solid yellow;
+      text-shadow: 2px 2px black;
+    }
+
+    #message {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 20px;
+      margin-top: 20px;
+      color: yellow;
+      text-shadow: 2px 2px black;
+    }
+  </style>
+</head>
+<body>
+  <h1>Juego de Pares - Feria de Info</h1>
+  <button id="start-button">START / REINICIAR</button>
+  <div id="timer">Tiempo: 20s</div>
+  <div id="game-board"></div>
+  <div id="message"></div>
+
+  <script>
+    const pairs = [
+      { type: 'img', value: 'led', content: '<img src="led.png" alt="LED">' },
+      { type: 'text', value: 'led', content: '<span>LED</span>' },
+
+      { type: 'img', value: 'resistor', content: '<img src="resistencia.png" alt="Resistencia">' },
+      { type: 'text', value: 'resistor', content: '<span>Resistor</span>' },
+
+      { type: 'img', value: 'Arduino', content: '<img src="arduino.png" alt="arduino">' },
+      { type: 'text', value: 'Arduino', content: '<span>Arduino</span>' },
+
+      { type: 'img', value: 'microprocesador', content: '<img src="microprocesador.png" alt="microprocesador">' },
+      { type: 'text', value: 'microprocesador', content: '<span>Microprocesador</span>' },
+
+      { type: 'img', value: 'protoboard', content: '<img src="protoboard.png" alt="protoboard">' },
+      { type: 'text', value: 'protoboard', content: '<span>Protoboard</span>' },
+
+      { type: 'img', value: 'microchip', content: '<img src="microchip.png" alt="microchip">' },
+      { type: 'text', value: 'microchip', content: '<span>Microchip</span>' }
+    ];
+
+    let board = document.getElementById('game-board');
+    let timerDisplay = document.getElementById('timer');
+    let message = document.getElementById('message');
+    let startButton = document.getElementById('start-button');
+    let firstCard = null;
+    let secondCard = null;
+    let lock = false;
+    let timeLeft = 50;
+    let timer;
+
+    function shuffle(array) {
+      return array.sort(() => Math.random() - 0.5);
+    }
+
+    function startGame() {
+      let shuffled = shuffle([...pairs]);
+      board.innerHTML = '';
+      shuffled.forEach(item => {
+        let card = document.createElement('div');
+        card.classList.add('card');
+        card.dataset.value = item.value;
+        card.innerHTML = `
+          <div class="card-inner">
+            <div class="card-front"></div>
+            <div class="card-back">${item.content}</div>
+          </div>
+        `;
+        board.appendChild(card);
+        card.addEventListener('click', flipCard);
+      });
+
+      timeLeft = 20;
+      timerDisplay.textContent = "Tiempo: " + timeLeft + "s";
+      message.textContent = "";
+      lock = false;
+      clearInterval(timer);
+      timer = setInterval(() => {
+        timeLeft--;
+        timerDisplay.textContent = "Tiempo: " + timeLeft + "s";
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          message.textContent = "⏰ ¡Tiempo terminado! Intenta de nuevo.";
+          message.style.color = "yellow"; // puedes cambiar si quieres arcade rojo
+          lock = true;
+        }
+      }, 1000);
+    }
+
+    function flipCard() {
+      if (lock || this.classList.contains('flipped')) return;
+
+      this.classList.add('flipped');
+      if (!firstCard) {
+        firstCard = this;
+      } else {
+        secondCard = this;
+        checkMatch();
+      }
+    }
+
+    function checkMatch() {
+      if (firstCard.dataset.value === secondCard.dataset.value) {
+        firstCard = null;
+        secondCard = null;
+        if (document.querySelectorAll('.card:not(.flipped)').length === 0) {
+          clearInterval(timer);
+          message.textContent = "🎉 ¡Ganaste! Encontraste todos los pares.";
+          message.style.color = "yellow";
+        }
+      } else {
+        lock = true;
+        setTimeout(() => {
+          firstCard.classList.remove('flipped');
+          secondCard.classList.remove('flipped');
+          firstCard = null;
+          secondCard = null;
+          lock = false;
+        }, 1000);
+      }
+    }
+
+    startButton.addEventListener('click', startGame);
+  </script>
+</body>
+</html>
+
+
