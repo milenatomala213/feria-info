@@ -163,7 +163,7 @@
     let firstCard = null;
     let secondCard = null;
     let lock = false;
-    let timeLeft = 50;
+    let timeLeft = 20;
     let timer;
 
     function shuffle(array) {
@@ -187,7 +187,7 @@
         card.addEventListener('click', flipCard);
       });
 
-      timeLeft = 20;
+      timeLeft = 50;
       timerDisplay.textContent = "Tiempo: " + timeLeft + "s";
       message.textContent = "";
       lock = false;
@@ -241,5 +241,6 @@
   </script>
 </body>
 </html>
+
 
 
